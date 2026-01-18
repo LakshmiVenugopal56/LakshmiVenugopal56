@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stone Paper Scissors</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f4f4f4;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #box {
+      background: white;
+      padding: 20px;
+      margin: 50px auto;
+      width: 300px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="box">
+    <h2>Stone Paper Scissors</h2>
+
+    <h3 id="turn">Player 1's turn</h3>
+
+    <button onclick="choose('Stone')">Stone</button>
+    <button onclick="choose('Paper')">Paper</button>
+    <button onclick="choose('Scissors')">Scissors</button>
+
+    <p id="message"></p>
+    <p id="result"></p>
+
+    <h4>Score</h4>
+    <p>Player 1: <span id="p1">0</span> | Player 2: <span id="p2">0</span></p>
+
+    <button onclick="resetGame()">Reset Game</button>
+  </div>
+
+<script>
+  let p1Choice = "";
+  let p2Choice = "";
+  let turn = 1;
+  let score1 = 0;
+  let score2 = 0;
+
+  function choose(choice) {
+    if (turn === 1) {
+      p1Choice = choice;
+      turn = 2;
+      document.getElementById("turn").innerText = "Player 2's turn";
+      document.getElementById("message").innerText = "Player 1 has chosen.";
+    } else {
+      p2Choice = choice;
+      showResult();
+    }
+  }
+
+  function showResult() {
+    let winner = "";
+
+    if (p1Choice === p2Choice) {
+      winner = "Tie!";
+    } else if (
+      (p1Choice === "Stone" && p2Choice === "Scissors") ||
+      (p1Choice === "Paper" && p2Choice === "Stone") ||
+      (p1Choice === "Scissors" && p2Choice === "Paper")
+    ) {
+      winner = "Player 1 wins!";
+      score1++;
+    } else {
+      winner = "Player 2 wins!";
+      score2++;
+    }
+
+    document.getElementById("result").innerText =
+      "P1: " + p1Choice + " | P2: " + p2Choice + " → " + winner;
+
+    document.getElementById("p1").innerText = score1;
+    document.getElementById("p2").innerText = score2;
+
+    if (score1 === 5 || score2 === 5) {
+      alert("Game Over!");
+      resetGame();
+    }
+
+    turn = 1;
+    p1Choice = "";
+    p2Choice = "";
+    document.getElementById("turn").innerText = "Player 1's turn";
+  }
+
+  function resetGame() {
+    score1 = 0;
+    score2 = 0;
+    document.getElementById("p1").innerText = 0;
+    document.getElementById("p2").innerText = 0;
+    document.getElementById("result").innerText = "";
+    document.getElementById("message").innerText = "New game started";
+  }
+</script>
+</body>
+</html>
