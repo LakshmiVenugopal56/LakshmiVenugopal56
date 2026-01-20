@@ -1,193 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Stone Paper Scissors</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #333;
-    }
+<meta charset="UTF-8">
+<title>Stone Paper Scissors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    .game-box {
-      background: white;
-      width: 360px;
-      padding: 25px;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#141e30,#243b55);
+  color:white;
+}
+header{
+  text-align:center;
+  padding:20px;
+  font-size:28px;
+  font-weight:bold;
+}
+.top-controls{
+  text-align:center;
+  padding:10px;
+}
+button{
+  padding:10px 16px;
+  margin:5px;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  cursor:pointer;
+}
+button:hover{transform:scale(1.05);}
+.primary{background:#ff9800;color:black;}
+.disabled{background:#777;color:#ccc;cursor:not-allowed;}
+input{
+  padding:6px;
+  width:90px;
+  text-align:center;
+}
 
-    h2 {
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 10px 18px;
-      margin: 8px;
-      border: none;
-      border-radius: 8px;
-      background: #667eea;
-      color: white;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #5a67d8;
-    }
-
-    input {
-      padding: 8px;
-      width: 80px;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .score {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-
-    #finalResult {
-      margin-top: 15px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #444;
-    }
-  </style>
+.game-area{
+  display:flex;
+  justify-content:space-around;
+  padding:20px;
+  flex-wrap:wrap;
+}
+.player{
+  width:280px;
+  background:rgba(255,255,255,0.15);
+  border-radius:15px;
+  padding:20px;
+  text-align:center;
+}
+.choice{
+  font-size:60px;
+  margin:10px;
+}
+.score{
+  font-size:18px;
+}
+.status{
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  margin:10px;
+}
+.choice-buttons{
+  text-align:center;
+  margin:15px;
+}
+.choice-buttons button{
+  width:90px;
+}
+.lock{
+  font-size:32px;
+}
+</style>
 </head>
 
 <body>
 
-<div class="game-box">
-  <h2>Stone Paper Scissors</h2>
+<header>🪨 Stone • 📄 Paper • ✂️ Scissors</header>
 
-  <p>Enter number of rounds:</p>
-  <input type="number" id="maxRounds" min="1" placeholder="5 or 10">
+<div class="top-controls">
+  <button class="primary" onclick="setMode('computer')">Play with Computer</button>
+  <button class="primary" onclick="setMode('two')">Two Players</button>
+  <button class="disabled">Play with Friend (Coming Soon)</button>
   <br><br>
-  <button onclick="startGame()">Start Game</button>
-
-  <h3 id="turn"></h3>
-
-  <div id="buttons" style="display:none;">
-    <button onclick="choose('Stone')">Stone</button>
-    <button onclick="choose('Paper')">Paper</button>
-    <button onclick="choose('Scissors')">Scissors</button>
-  </div>
-
-  <p id="message"></p>
-
-  <div class="score">
-    Player 1: <span id="p1">0</span> |
-    Player 2: <span id="p2">0</span>
-  </div>
-
-  <p id="roundInfo"></p>
-  <p id="finalResult"></p>
-
-  <button onclick="resetGame()">Reset</button>
+  Rounds:
+  <input type="number" id="totalRounds" placeholder="5 or 10">
+  <button class="primary" onclick="startGame()">Start Game</button>
 </div>
 
+<div class="game-area">
+  <div class="player">
+    <h3>Player 1</h3>
+    <div class="choice" id="p1Display">❔</div>
+    <div class="score">Score: <span id="s1">0</span></div>
+  </div>
+
+  <div class="player">
+    <h3 id="p2Title">Player 2</h3>
+    <div class="choice" id="p2Display">❔</div>
+    <div class="score">Score: <span id="s2">0</span></div>
+  </div>
+</div>
+
+<div class="choice-buttons" id="controls" style="display:none;">
+  <button onclick="makeChoice('Stone')">🪨 Stone</button>
+  <button onclick="makeChoice('Paper')">📄 Paper</button>
+  <button onclick="makeChoice('Scissors')">✂️ Scissors</button>
+</div>
+
+<div class="status" id="statusText"></div>
+
 <script>
-  let p1Choice = "";
-  let p2Choice = "";
-  let turn = 1;
-  let score1 = 0;
-  let score2 = 0;
-  let round = 0;
-  let totalRounds = 0;
+let mode="", rounds=0, currentRound=0;
+let turn=1;
+let p1Choice="", p2Choice="";
+let score1=0, score2=0;
 
-  function startGame() {
-    totalRounds = parseInt(document.getElementById("maxRounds").value);
+function setMode(m){
+  mode=m;
+  document.getElementById("p2Title").innerText =
+    (m==="computer") ? "Computer" : "Player 2";
+}
 
-    if (!totalRounds || totalRounds <= 0) {
-      alert("Enter a valid number of rounds");
-      return;
-    }
-
-    document.getElementById("buttons").style.display = "block";
-    document.getElementById("turn").innerText = "Player 1's turn";
-    document.getElementById("roundInfo").innerText = "Round 1 of " + totalRounds;
-    document.getElementById("finalResult").innerText = "";
+function startGame(){
+  rounds=parseInt(document.getElementById("totalRounds").value);
+  if(!mode || !rounds || rounds<=0){
+    alert("Select mode and valid rounds");
+    return;
   }
+  document.getElementById("controls").style.display="block";
+  document.getElementById("statusText").innerText="Player 1's turn";
+}
 
-  function choose(choice) {
-    if (round >= totalRounds) return;
+function makeChoice(choice){
+  if(currentRound>=rounds) return;
 
-    if (turn === 1) {
-      p1Choice = choice;
-      turn = 2;
-      document.getElementById("turn").innerText = "Player 2's turn";
-      document.getElementById("message").innerText = "Player 1 has chosen";
-    } else {
-      p2Choice = choice;
-      evaluateRound();
-    }
-  }
-
-  function evaluateRound() {
-    if (p1Choice === p2Choice) {
-      // tie, no score
-    } else if (
-      (p1Choice === "Stone" && p2Choice === "Scissors") ||
-      (p1Choice === "Paper" && p2Choice === "Stone") ||
-      (p1Choice === "Scissors" && p2Choice === "Paper")
-    ) {
-      score1++;
-    } else {
-      score2++;
-    }
-
-    round++;
-
-    document.getElementById("p1").innerText = score1;
-    document.getElementById("p2").innerText = score2;
-
-    if (round === totalRounds) {
-      declareWinner();
-    } else {
-      turn = 1;
-      p1Choice = "";
-      p2Choice = "";
-      document.getElementById("turn").innerText = "Player 1's turn";
-      document.getElementById("roundInfo").innerText =
-        "Round " + (round + 1) + " of " + totalRounds;
-      document.getElementById("message").innerText = "";
+  if(mode==="computer"){
+    p1Choice=choice;
+    p2Choice=randomChoice();
+    revealAndDecide();
+  }else{
+    if(turn===1){
+      p1Choice=choice;
+      document.getElementById("p1Display").innerText="🔒";
+      document.getElementById("statusText").innerText="Player 2's turn";
+      turn=2;
+    }else{
+      p2Choice=choice;
+      document.getElementById("p2Display").innerText="🔒";
+      revealAndDecide();
+      turn=1;
     }
   }
+}
 
-  function declareWinner() {
-    let result = "";
+function revealAndDecide(){
+  document.getElementById("p1Display").innerText=icon(p1Choice);
+  document.getElementById("p2Display").innerText=icon(p2Choice);
 
-    if (score1 > score2) {
-      result = "🏆 Player 1 Wins the Game!";
-    } else if (score2 > score1) {
-      result = "🏆 Player 2 Wins the Game!";
-    } else {
-      result = "🤝 It's a Draw!";
-    }
-
-    document.getElementById("finalResult").innerText = result;
-    document.getElementById("turn").innerText = "Game Over";
-    document.getElementById("roundInfo").innerText = "";
+  if(p1Choice!==p2Choice){
+    if(
+      (p1Choice==="Stone"&&p2Choice==="Scissors")||
+      (p1Choice==="Paper"&&p2Choice==="Stone")||
+      (p1Choice==="Scissors"&&p2Choice==="Paper")
+    ) score1++;
+    else score2++;
   }
 
-  function resetGame() {
-    score1 = score2 = round = 0;
-    turn = 1;
-    p1Choice = p2Choice = "";
-    document.getElementById("p1").innerText = 0;
-    document.getElementById("p2").innerText = 0;
-    document.getElementById("turn").innerText = "";
-    document.getElementById("roundInfo").innerText = "";
-    document.getElementById("finalResult").innerText = "";
-    document.getElementById("buttons").style.display = "none";
+  document.getElementById("s1").innerText=score1;
+  document.getElementById("s2").innerText=score2;
+
+  currentRound++;
+
+  if(currentRound===rounds){
+    endGame();
+  }else{
+    document.getElementById("statusText").innerText=
+      "Round "+(currentRound+1)+" of "+rounds;
   }
+}
+
+function endGame(){
+  if(score1>score2)
+    statusText.innerText="🏆 Player 1 Wins!";
+  else if(score2>score1)
+    statusText.innerText="🏆 "+document.getElementById("p2Title").innerText+" Wins!";
+  else
+    statusText.innerText="🤝 Match Draw!";
+}
+
+function randomChoice(){
+  return ["Stone","Paper","Scissors"][Math.floor(Math.random()*3)];
+}
+
+function icon(c){
+  return c==="Stone"?"🪨":c==="Paper"?"📄":"✂️";
+}
 </script>
 
 </body>
